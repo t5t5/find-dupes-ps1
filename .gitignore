@@ -1,0 +1,8 @@
+# vim
+*.swp
+
+# Temporary files
+*.tmp
+*.log
+1.txt
+1.ps1
