@@ -33,9 +33,29 @@ function Show-DuplicateGroups {
         if ($group.HardlinkGroups.Count -gt 0) {
             foreach ($gid in $group.HardlinkGroups.Keys) {
                 $hlFiles = $group.HardlinkGroups[$gid]
-                Write-Host "  [HARDLINK GROUP] $($hlFiles.Count) files pointing to same data:" -ForegroundColor Green
+                # Собираем ВСЕ уникальные пути: файлы группы + их цели
+                $allPaths = @{}
                 foreach ($f in $hlFiles) {
-                    Write-Host "      $($f.FullPath)" -ForegroundColor DarkGreen
+                    $allPaths[$f.FullPath] = $true
+                    if ($f.HardlinkTargets) {
+                        foreach ($t in $f.HardlinkTargets) {
+                            $allPaths[$t] = $true
+                        }
+                    }
+                }
+                $totalCount = $allPaths.Count
+
+                Write-Host "  [HARDLINK GROUP] $totalCount files pointing to same data:" -ForegroundColor Green
+        
+                # Первый файл — «корень», остальные — его цели
+                $first = $hlFiles[0]
+                Write-Host "      $($first.FullPath)" -ForegroundColor DarkGreen
+
+                # Все цели из HardlinkTargets (включая внешние)
+                if ($first.HardlinkTargets -and $first.HardlinkTargets.Count -gt 0) {
+                    foreach ($target in $first.HardlinkTargets) {
+                        Write-Host "        --> $target" -ForegroundColor DarkGray
+                    }
                 }
             }
         }
