@@ -10,6 +10,7 @@
 . "$PSScriptRoot\lib\HashCalculator.ps1"
 . "$PSScriptRoot\lib\DuplicateFinder.ps1"
 . "$PSScriptRoot\lib\Reporter.ps1"
+. "$PSScriptRoot\lib\CleanupExporter.ps1"
 
 # ----- Основной поток -----
 Write-Host "=== Find Duplicates ===" -ForegroundColor Cyan
@@ -42,6 +43,19 @@ $duplicates = Find-DuplicateGroups -FileList $files
 
 # Шаг 5: Вывод
 Show-DuplicateGroups -DuplicateGroups $duplicates
+
+# Шаг 6: Экспорт скрипта очистки (всегда, если включено)
+if ($Config.ExportCleanup) {
+    Export-CleanupScript -DuplicateGroups $duplicates `
+                         -OutputPath $Config.CleanupScriptPath `
+                         -Action $Config.CleanupAction
+}
+
+# (Опционально) Запуск — только если явно включено
+if ($Config.RunCleanup -and $Config.ExportCleanup) {
+    Write-Host "`n[!] Running cleanup script (RunCleanup = `$true)..." -ForegroundColor Red
+    & $Config.CleanupScriptPath
+}
 
 # ----- Итог -----
 $elapsed = (Get-Date) - $startTime

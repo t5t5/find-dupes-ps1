@@ -23,4 +23,12 @@ $Config = @{
 
     # ----- Производительность -----
     ShowProgress    = $true                # Показывать прогресс
+
+    # ----- Экспорт скрипта очистки -----
+    ExportCleanup      = $true                    # Генерировать скрипт?
+    CleanupAction      = "Hardlink"               # Hardlink или Delete
+    CleanupScriptPath  = ".\output\cleanup.ps1"   # Куда сохранить
+    
+    # ----- Запуск (ОПАСНО, по умолчанию выключено) -----
+    RunCleanup         = $false                   # Запустить сразу?
 }
