@@ -54,7 +54,7 @@ function Get-PartialFileHash {
         $fs.Read($buffer, 0, $BlockSize) | Out-Null
         $hashAlgo.TransformBlock($buffer, 0, $BlockSize, $null, 0) | Out-Null
 
-        $hashAlgo.TransformFinalBlock($null, 0, 0) | Out-Null
+        $hashAlgo.TransformFinalBlock([byte[]]@(), 0, 0) | Out-Null
         $fs.Close()
 
         $hashBytes = $hashAlgo.Hash
@@ -63,6 +63,7 @@ function Get-PartialFileHash {
         return ($hashBytes | ForEach-Object { $_.ToString("X2") }) -join ""
 
     } catch {
+        Write-Host "  [PARTIAL-ERROR] $Path : $($_.Exception.Message)" -ForegroundColor Red
         return $null
     }
 }
@@ -84,8 +85,46 @@ function Add-FileHash {
 
     Write-Host "[3/4] Grouping by size and comparing hashes..." -ForegroundColor Yellow
 
-    # Группируем по размеру
-    $sizeGroups = $FileList | Group-Object -Property Size | Where-Object { $_.Count -gt 1 }
+    # ===== DEBUG =====
+    Write-Host "DEBUG: FileList count = $($FileList.Count)" -ForegroundColor Magenta
+    Write-Host "DEBUG: Sizes = $(($FileList | ForEach-Object { $_.Size }) -join ', ')" -ForegroundColor Magenta
+    Write-Host "DEBUG: Size types = $(($FileList | ForEach-Object { $_.Size.GetType().Name }) -join ', ')" -ForegroundColor Magenta
+    Write-Host "DEBUG: IsHardlink values = $(($FileList | ForEach-Object { $_.IsHardlink }) -join ', ')" -ForegroundColor Magenta
+    # =================
+
+    # ===== DEBUG =====
+    $FileList | ForEach-Object {
+        $s = $_.Size
+        $type = if ($s -ne $null) { $s.GetType().FullName } else { "NULL" }
+        $hash = if ($s -ne $null) { $s.GetHashCode() } else { "N/A" }
+        Write-Host "DEBUG: Size='$s' | Type=$type | HashCode=$hash" -ForegroundColor Magenta
+    }
+    # =================
+    Write-Host "DEBUG: FileList type = $($FileList.GetType().FullName)" -ForegroundColor Magenta
+    Write-Host "DEBUG: FileList is array = $($FileList -is [array])" -ForegroundColor Magenta
+    Write-Host "DEBUG: FileList count = $($FileList.Count)" -ForegroundColor Magenta
+    Write-Host "DEBUG: First element type = $($FileList[0].GetType().FullName)" -ForegroundColor Magenta
+
+    # Ручная группировка по размеру (обходим баг PS 5.1)
+    $sizeGroupsMap = @{}
+    foreach ($file in $FileList) {
+        $key = [string]$file.Size
+        if (-not $sizeGroupsMap.ContainsKey($key)) {
+            $sizeGroupsMap[$key] = @()
+        }
+        $sizeGroupsMap[$key] += $file
+    }
+
+    $sizeGroups = @()
+    foreach ($key in $sizeGroupsMap.Keys) {
+        if ($sizeGroupsMap[$key].Count -gt 1) {
+            $sizeGroups += [PSCustomObject]@{
+                Name  = $key
+                Group = $sizeGroupsMap[$key]
+                Count = $sizeGroupsMap[$key].Count
+            }
+        }
+    }
 
     if ($sizeGroups.Count -eq 0) {
         Write-Host "  No files with matching sizes found." -ForegroundColor Green
@@ -129,6 +168,7 @@ function Add-FileHash {
                     $errorCount++
                 }
             } catch {
+                Write-Host "  [ERROR] $($file.Name): $($_.Exception.Message)" -ForegroundColor Red
                 $errorCount++
             }
         }

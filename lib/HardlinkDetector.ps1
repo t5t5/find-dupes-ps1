@@ -23,12 +23,14 @@ function Add-HardlinkInfo {
     # Определяем корень диска, если не передан
     if (-not $DriveRoot) {
         if ($FileList.Count -gt 0) {
-            $DriveRoot = (Get-Item -LiteralPath $FileList[0].FullPath).Root.FullName
+            $DriveRoot = [System.IO.Path]::GetPathRoot($FileList[0].FullPath)
         } else {
             Write-Host "  No files to check." -ForegroundColor DarkGray
             return $FileList
         }
     }
+
+    Write-Host "DEBUG: DriveRoot = '$DriveRoot'" -ForegroundColor Magenta
 
     $processedPaths = @{}   # Уже обработанные пути
     $groupCounter = 0
@@ -81,6 +83,13 @@ function Add-HardlinkInfo {
     # Считаем итог
     $hardlinkCount = ($FileList | Where-Object { $_.IsHardlink }).Count
     Write-Host "  Files in hardlink groups: $hardlinkCount" -ForegroundColor Gray
+
+    # ===== DEBUG =====
+    Write-Host "DEBUG: FileList count = $($FileList.Count)" -ForegroundColor Magenta
+    Write-Host "DEBUG: IsHardlink values = $(($FileList | ForEach-Object { $_.IsHardlink }) -join ', ')" -ForegroundColor Magenta
+    Write-Host "DEBUG: processedPaths keys = $($processedPaths.Keys -join ', ')" -ForegroundColor Magenta
+    Write-Host "DEBUG: FileList paths = $(($FileList | ForEach-Object { $_.FullPath }) -join ', ')" -ForegroundColor Magenta
+    # =================
 
     return $FileList
 }
