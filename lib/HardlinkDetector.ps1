@@ -30,8 +30,6 @@ function Add-HardlinkInfo {
         }
     }
 
-    Write-Host "DEBUG: DriveRoot = '$DriveRoot'" -ForegroundColor Magenta
-
     $processedPaths = @{}   # Уже обработанные пути
     $groupCounter = 0
 
@@ -83,13 +81,6 @@ function Add-HardlinkInfo {
     # Считаем итог
     $hardlinkCount = ($FileList | Where-Object { $_.IsHardlink }).Count
     Write-Host "  Files in hardlink groups: $hardlinkCount" -ForegroundColor Gray
-
-    # ===== DEBUG =====
-    Write-Host "DEBUG: FileList count = $($FileList.Count)" -ForegroundColor Magenta
-    Write-Host "DEBUG: IsHardlink values = $(($FileList | ForEach-Object { $_.IsHardlink }) -join ', ')" -ForegroundColor Magenta
-    Write-Host "DEBUG: processedPaths keys = $($processedPaths.Keys -join ', ')" -ForegroundColor Magenta
-    Write-Host "DEBUG: FileList paths = $(($FileList | ForEach-Object { $_.FullPath }) -join ', ')" -ForegroundColor Magenta
-    # =================
 
     return $FileList
 }

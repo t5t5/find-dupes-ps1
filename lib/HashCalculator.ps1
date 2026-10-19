@@ -85,26 +85,6 @@ function Add-FileHash {
 
     Write-Host "[3/4] Grouping by size and comparing hashes..." -ForegroundColor Yellow
 
-    # ===== DEBUG =====
-    Write-Host "DEBUG: FileList count = $($FileList.Count)" -ForegroundColor Magenta
-    Write-Host "DEBUG: Sizes = $(($FileList | ForEach-Object { $_.Size }) -join ', ')" -ForegroundColor Magenta
-    Write-Host "DEBUG: Size types = $(($FileList | ForEach-Object { $_.Size.GetType().Name }) -join ', ')" -ForegroundColor Magenta
-    Write-Host "DEBUG: IsHardlink values = $(($FileList | ForEach-Object { $_.IsHardlink }) -join ', ')" -ForegroundColor Magenta
-    # =================
-
-    # ===== DEBUG =====
-    $FileList | ForEach-Object {
-        $s = $_.Size
-        $type = if ($s -ne $null) { $s.GetType().FullName } else { "NULL" }
-        $hash = if ($s -ne $null) { $s.GetHashCode() } else { "N/A" }
-        Write-Host "DEBUG: Size='$s' | Type=$type | HashCode=$hash" -ForegroundColor Magenta
-    }
-    # =================
-    Write-Host "DEBUG: FileList type = $($FileList.GetType().FullName)" -ForegroundColor Magenta
-    Write-Host "DEBUG: FileList is array = $($FileList -is [array])" -ForegroundColor Magenta
-    Write-Host "DEBUG: FileList count = $($FileList.Count)" -ForegroundColor Magenta
-    Write-Host "DEBUG: First element type = $($FileList[0].GetType().FullName)" -ForegroundColor Magenta
-
     # Ручная группировка по размеру (обходим баг PS 5.1)
     $sizeGroupsMap = @{}
     foreach ($file in $FileList) {
