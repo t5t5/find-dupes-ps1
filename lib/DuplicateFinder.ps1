@@ -44,9 +44,10 @@ function Find-DuplicateGroups {
                     $hardlinkSubgroups[$gid] = @()
                 }
                 $hardlinkSubgroups[$gid] += $file
-            } else {
+            } elseif (-not $file.IsHardlink) {
                 $regularFiles += $file
             }
+            # файлы с IsHardlink=$true но без HardlinkGroupId (внешние) — не добавляем никуда
         }
 
         $result += [PSCustomObject]@{

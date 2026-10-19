@@ -27,7 +27,25 @@ function Show-DuplicateGroups {
 
     foreach ($group in $DuplicateGroups) {
         Write-Host "`n[Hash: $($group.Hash)]" -ForegroundColor Yellow
-        Write-Host "  Size: $([math]::Round($group.Size/1KB, 2)) KB | Total files: $($group.TotalCount)" -ForegroundColor Cyan
+
+        # Считаем реальное количество: уникальные пути из HardlinkGroups + RegularFiles + HardlinkTargets
+        $allPaths = @{}
+        foreach ($gid in $group.HardlinkGroups.Keys) {
+            foreach ($f in $group.HardlinkGroups[$gid]) {
+                $allPaths[$f.FullPath] = $true
+                if ($f.HardlinkTargets) {
+                    foreach ($t in $f.HardlinkTargets) {
+                        $allPaths[$t] = $true
+                    }
+                }
+            }
+        }
+        foreach ($f in $group.RegularFiles) {
+            $allPaths[$f.FullPath] = $true
+        }
+        $realTotal = $allPaths.Count
+
+        Write-Host "  Size: $([math]::Round($group.Size/1KB, 2)) KB | Total files: $realTotal" -ForegroundColor Cyan
 
         # Хардлинк-группы
         if ($group.HardlinkGroups.Count -gt 0) {
